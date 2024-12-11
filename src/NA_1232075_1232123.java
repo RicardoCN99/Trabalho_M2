@@ -153,6 +153,13 @@ public class NA_1232075_1232123 {
         }
         System.out.printf("h) dia mais tardio em que todos os veículos necessitam de recarregar <%s>",maiorDia);
     }
+
+
+
+    public static void apagaroqueestaembaixo(){
+
+    }
+
     public static void apagar2teste(){
 
     }
