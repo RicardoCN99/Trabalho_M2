@@ -6,7 +6,6 @@ import java.util.Scanner;
 public class NA_1232075_1232123 {
 
     final static int KMMAXBATERIA=100;
-
     public static void main(String[] args) {
         Scanner sc= new Scanner(System.in);
         /* a) */
@@ -152,6 +151,9 @@ public class NA_1232075_1232123 {
             }
         }
         System.out.printf("h) dia mais tardio em que todos os veículos necessitam de recarregar <%s>",maiorDia);
+    }
+    public static void apagar2teste(){
+
     }
 }
 // j) criar constante para colocar o dia X
