@@ -162,6 +162,8 @@ public class NA_1232075_1232123 {
     }
 
     public static void apaapdomeivorwjnfvkr(){
+            int a =2;
+            int b =3;
 
     }
 }
