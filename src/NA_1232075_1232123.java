@@ -160,6 +160,10 @@ public class NA_1232075_1232123 {
     public static void apagar(){
 
     }
+
+    public static void apaapdomeivorwjnfvkr(){
+
+    }
 }
 
 
