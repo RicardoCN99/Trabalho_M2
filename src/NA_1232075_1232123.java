@@ -6,6 +6,7 @@ import java.util.Scanner;
 public class NA_1232075_1232123 {
 
     final static int KMMAXBATERIA=100;
+
     public static void main(String[] args) {
         Scanner sc= new Scanner(System.in);
         /* a) */
@@ -155,6 +156,12 @@ public class NA_1232075_1232123 {
     public static void apagar2teste(){
 
     }
+
+    public static void apagar(){
+
+    }
 }
+
+
 // j) criar constante para colocar o dia X
 
