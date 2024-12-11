@@ -1,180 +1,310 @@
-// Ricardo_1232075 b) d) g) h) j)
-// Bruno_1232123 a) c) e) f) i)
+// 1232123 - a, c, e, f, i
+// 1232075 - b, d, g, h, j
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 public class NA_1232075_1232123 {
+    static final int KMMAXBATERIA = 100;
+    static final double CUSTOCARREGAMENTO = 5.5;
+    static final int DIAPREVENCAO = 4;
+    static final String NOMEFICHEIROINPUT = "ficheiro3.txt";
 
-    final static int KMMAXBATERIA=100;
-
-    public static void main(String[] args) {
-        Scanner sc= new Scanner(System.in);
-        /* a) */
-        int v= sc.nextInt();
-        int d= sc.nextInt();
-
-        int[][] matrizPlaneamento= new int[v][d];
-        preencheMatrizPlaneamento(sc,matrizPlaneamento);
-
-        /* b) */
-        int[] kmAPercorrerPorVeiculo;
-        kmAPercorrerPorVeiculo=somaKmAPercorrerPorCadaVeiculo(matrizPlaneamento,v);
-        exibeKmAPercorrerPorVeiculo(kmAPercorrerPorVeiculo);
-
-        /* d) */
-        double[][] matrizPercentagemBateriasPorDia=new double[v][d];
-        verificaPercentagemdaBateria(matrizPlaneamento,matrizPercentagemBateriasPorDia);
-
-        exibeResultadosPercentagemDeBateriaPorDia(matrizPercentagemBateriasPorDia);
-        preencheArrayComMaximaSequenciaDeRecargasPorVeiculo(matrizRecargas,veiculos);
-
-        exibirDiaMaisTardioEmQueTodosOsVeiculosRecarregam(matrizRecargas);
-
+    public static void main(String[] args) throws FileNotFoundException {
+        // a
+        int[][] matrizPlaneamento = obterInformacao();
+        // b
+        somarKmTotalAPercorrerPorCadaVeiculo(matrizPlaneamento);
+        // c
+        int[][] matrizCarregamentos = calcularNumeroRecargasDaBateriaPorDiaPorCarro(matrizPlaneamento);
+        // d
+        double[][] matrizPorcentagemBateria = calcularPercentagemDaBateria(matrizPlaneamento);
+        // e)
+        double[] arrMediaKmPercorridos = calcularMediaKmPercorridosPorDia(matrizPlaneamento);
+        // f)
+        mostrarVeiculosKmSempreAcimaDaMedia(matrizPlaneamento, arrMediaKmPercorridos);
+        // g)
+        preencherArrayComMaximaSequenciaDeRecargasPorVeiculo(matrizCarregamentos);
+        // h)
+        exibirDiaMaisTardioEmQueTodosOsVeiculosRecarregam(matrizCarregamentos);
+        // i)
+        calcularCustoEstimadoRecarregarTodaFrota(matrizCarregamentos);
+        // j)
+        obterVeiculoDePrevencao(matrizPlaneamento, matrizPorcentagemBateria);
     }
 
-    /* a) */
-    public static int[][] preencheMatrizPlaneamento(Scanner sc,int[][] matriz){
-        for (int v = 0; v < matriz.length; v++) {
-            for (int d = 0; d < matriz[0].length; d++) {
-            matriz[v][d]= sc.nextInt();
-            }
+    // method para o header das tabelas
+    public static void exibirCabecalhoDaTabela(int[][] matrizResultados, String titulo) {
+        System.out.printf("%s%ndia :", titulo);
+        for (int linha = 0; linha < matrizResultados[0].length; linha++) {
+            System.out.printf("%8d", linha);
         }
-        for (int v = 0; v < matriz.length; v++) {
-            for (int d = 0; d < matriz[0].length; d++) {
-                System.out.print(matriz[v][d]+" ");
+        System.out.printf("%n----|--------|");
+        for (int veiculo = 0; veiculo < matrizResultados[0].length - 1; veiculo++) {
+            System.out.print("-------|");
+        }
+        System.out.println();
+    }
+
+    // exibe valores da tabela da alinea a) e c)
+    public static void exibirValoresDaTabelaPlaneamentoERecargas(int[][] matriz) {
+        for (int veiculo = 0; veiculo < matriz.length; veiculo++) {
+            System.out.printf("V%d  :", veiculo);
+            for (int dia = 0; dia < matriz[0].length; dia++) {
+                System.out.printf("%8d", matriz[veiculo][dia]);
             }
             System.out.println();
         }
-        return matriz;
+        System.out.println();
     }
 
-
-    /* b) */
-    public static int[] somaKmAPercorrerPorCadaVeiculo(int[][] matriz,int nveiculos) {
-        int[] totalKmPercorrerPorVeiculo=new int[nveiculos];
-        for (int v = 0; v < matriz.length; v++) {
-            for (int d = 0; d < matriz[0].length; d++) {
-                totalKmPercorrerPorVeiculo[v] += matriz[v][d];
+    // a
+    public static int[][] obterInformacao() throws FileNotFoundException {
+        File inputFile = new File(NOMEFICHEIROINPUT);
+        Scanner sc = new Scanner(inputFile);
+        String descPlaneamento = sc.nextLine();
+        int numVeiculos = sc.nextInt();
+        int numDiasPlaneamento = sc.nextInt();
+        int[][] matriz = new int[numVeiculos][numDiasPlaneamento];
+        for (int veiculo = 0; veiculo < numVeiculos; veiculo++) {
+            for (int dia = 0; dia < numDiasPlaneamento; dia++) {
+                matriz[veiculo][dia] = sc.nextInt();
             }
         }
-        return totalKmPercorrerPorVeiculo;
+        sc.close();
+        exibirCabecalhoDaTabela(matriz, "a) planeamento (km/dia/veículo)");
+        exibirValoresDaTabelaPlaneamentoERecargas(matriz);
+        return matriz;
+
     }
 
-    public static void exibeKmAPercorrerPorVeiculo(int[] arr){
-        System.out.println("b) total de km a percorrer");
-        for (int v = 0; v < arr.length; v++) {
-            System.out.printf("V%d :%7d km%n",v,arr[v]);
+    // b
+    public static void somarKmTotalAPercorrerPorCadaVeiculo(int[][] matrizPlaneamento) {
+        int nveiculos = matrizPlaneamento.length;
+        int[] totalKmPercorrerPorVeiculo = new int[nveiculos];
+        for (int veiculo = 0; veiculo < matrizPlaneamento.length; veiculo++) {
+            for (int dia = 0; dia < matrizPlaneamento[0].length; dia++) {
+                totalKmPercorrerPorVeiculo[veiculo] += matrizPlaneamento[veiculo][dia];
+            }
         }
+        exibirKmAPercorrerPorVeiculo(totalKmPercorrerPorVeiculo, "b) total de km a percorrer");
     }
 
-    /* d) */
-    public static double[][] verificaPercentagemdaBateria(int[][] matriz,double[][] matrizPercentagemBateria) {
+    public static void exibirKmAPercorrerPorVeiculo(int[] arr, String titulo) {
+        System.out.println(titulo);
+        for (int veiculo = 0; veiculo < arr.length; veiculo++) {
+            System.out.printf("V%-3d:%8d km%n", veiculo, arr[veiculo]);
+        }
+        System.out.println();
+    }
+
+    // c
+    public static int[][] calcularNumeroRecargasDaBateriaPorDiaPorCarro(int[][] matrizPrincipal) {
+        int[][] matrizRecargas = new int[matrizPrincipal.length][matrizPrincipal[0].length];
+        int somaKms = 0, contadorRecargas = 0;
+        for (int veiculo = 0; veiculo < matrizPrincipal.length; veiculo++) {
+            for (int dia = 0; dia < matrizPrincipal[0].length; dia++) {
+                somaKms = somaKms + matrizPrincipal[veiculo][dia];
+                while (somaKms >= KMMAXBATERIA) {
+                    somaKms = somaKms - KMMAXBATERIA;
+                    contadorRecargas++;
+                }
+                matrizRecargas[veiculo][dia] = contadorRecargas;
+                contadorRecargas = 0;
+            }
+            somaKms = 0;
+        }
+        exibirCabecalhoDaTabela(matrizRecargas, "c) recargas das baterias");
+        exibirValoresDaTabelaPlaneamentoERecargas(matrizRecargas);
+        return matrizRecargas;
+    }
+
+    // d
+    public static double[][] calcularPercentagemDaBateria(int[][] matriz) {
+        double[][] matrizPercentagemBateria = new double[matriz.length][matriz[0].length];
         int kmAPercorrerNoDia = 0;
         double percentagemBateria;
-        for (int v = 0; v < matriz.length; v++) {
-            int kmDeBateriaQueSobramParaDiaSeguinte=0;
-            for (int d = 0; d < matriz[0].length; d++) {
-                kmAPercorrerNoDia = matriz[v][d];
-                kmAPercorrerNoDia +=kmDeBateriaQueSobramParaDiaSeguinte;
+        for (int veiculo = 0; veiculo < matriz.length; veiculo++) {
+            int kmDeBateriaQueSobramParaDiaSeguinte = 0;
+            for (int dia = 0; dia < matriz[0].length; dia++) {
+                kmAPercorrerNoDia = matriz[veiculo][dia] + kmDeBateriaQueSobramParaDiaSeguinte;
                 while (kmAPercorrerNoDia >= KMMAXBATERIA) {
-                    kmAPercorrerNoDia -= 100;
+                    kmAPercorrerNoDia -= KMMAXBATERIA;
                 }
-                percentagemBateria = 100 - kmAPercorrerNoDia;
-                matrizPercentagemBateria[v][d]=percentagemBateria;
-                kmDeBateriaQueSobramParaDiaSeguinte= kmAPercorrerNoDia;
+                percentagemBateria = KMMAXBATERIA - kmAPercorrerNoDia;
+                matrizPercentagemBateria[veiculo][dia] = percentagemBateria;
+                kmDeBateriaQueSobramParaDiaSeguinte = kmAPercorrerNoDia;
             }
         }
+        exibirCabecalhoDaTabela(matriz, "d) carga das baterias");
+        exibirValoresDaPorcentagemDeBateria(matrizPercentagemBateria);
         return matrizPercentagemBateria;
     }
 
-    public static void exibeResultadosPercentagemDeBateriaPorDia(double[][] matrizPercentagemDeBateria){
-        System.out.println("d) cargas das baterias:");
-        for (int d = 0; d < matrizPercentagemDeBateria[0].length; d++) {
-            System.out.print("|--------");
-        }
-        System.out.println();
-        for (int v = 0; v < matrizPercentagemDeBateria.length ; v++) {
-            for (int d = 0; d < matrizPercentagemDeBateria[0].length ; d++) {
-                System.out.printf("%8.1f%%",matrizPercentagemDeBateria[v][d]);
+    // exibe valores da tabela da alinea d)
+    public static void exibirValoresDaPorcentagemDeBateria(double[][] matriz) {
+        for (int veiculo = 0; veiculo < matriz.length; veiculo++) {
+            System.out.printf("V%d  :", veiculo);
+            for (int dia = 0; dia < matriz[0].length; dia++) {
+                System.out.printf("%7.1f%%", matriz[veiculo][dia]);
             }
             System.out.println();
         }
+        System.out.println();
     }
 
-   // g) Mostrar os veículos que terão de ser recarregados em mais dias consecutivos
-    public static int[] preencheArrayComMaximaSequenciaDeRecargasPorVeiculo(int[][] matrizRecargas, int veiculos){
-        int[] recargasConsecutivasDeCadaVeiculo= new int[veiculos];
-        int somaDeRecargas=0;
-        int maximaSequenciaDeRecargas=0;
-        for (int v = 0; v < matrizRecargas.length; v++) {
-            for (int d = 0; d < matrizRecargas[0].length; d++) {
-                if (matrizRecargas[v][d]!=0){
-                    somaDeRecargas+=1;
-                }else{
-                    if (somaDeRecargas>maximaSequenciaDeRecargas){
-                        maximaSequenciaDeRecargas=somaDeRecargas;
-                        somaDeRecargas=0;
-                    }
+    //e
+    public static double[] calcularMediaKmPercorridosPorDia(int[][] matrizPrincipal) {
+        int somaDia = 0;
+        double[] mediaKmPercorridos = new double[matrizPrincipal[0].length];
+        for (int dia = 0; dia < matrizPrincipal[0].length; dia++) {
+            for (int veiculo = 0; veiculo < matrizPrincipal.length; veiculo++) {
+                somaDia += matrizPrincipal[veiculo][dia];
+            }
+            mediaKmPercorridos[dia] = ((double) somaDia / matrizPrincipal.length);
+            somaDia = 0;
+        }
+        exibirCabecalhoDaTabela(matrizPrincipal, "e) média de km diários da frota");
+        exibirValoresMediaKmPercorridosPorDia(mediaKmPercorridos);
+        return mediaKmPercorridos;
+    }
+
+    // exibe valores da tabela da alinea e)
+    public static void exibirValoresMediaKmPercorridosPorDia(double[] arr) {
+        System.out.printf("km  :");
+        for (int dia = 0; dia < arr.length; dia++) {
+            System.out.printf("%8.1f", arr[dia]);
+        }
+        System.out.printf("%n%n");
+    }
+
+    //f
+    public static void mostrarVeiculosKmSempreAcimaDaMedia(int[][] matrizPrincipal, double[] arrMediaKmPercorridos) {
+        boolean[] sempreAcimaDaMedia = new boolean[matrizPrincipal.length];
+        int quantidadeVeiculosSempreAcimaDaMedia = 0;
+        boolean acimaMedia;
+        for (int veiculo = 0; veiculo < matrizPrincipal.length; veiculo++) {
+            acimaMedia = true;
+            for (int dia = 0; dia < matrizPrincipal[0].length; dia++) {
+                if (matrizPrincipal[veiculo][dia] <= arrMediaKmPercorridos[dia]) {
+                    acimaMedia = false;
                 }
             }
-            recargasConsecutivasDeCadaVeiculo[v]=maximaSequenciaDeRecargas;
-        }
-        exibirVeiculoComMaisDiasConsecutivosDeRecargas(recargasConsecutivasDeCadaVeiculo);
-        return recargasConsecutivasDeCadaVeiculo;
-    }
-
-    public static void exibirVeiculoComMaisDiasConsecutivosDeRecargas(int[] arr){
-        int veiculoComMaiorSequenciaDeRecargas=0;
-        int sequenciaMaximaDeRecargas=0;
-        int sequenciaDeRecargasDeVeiculoAnterior=0;
-        for (int v = 0; v < arr.length; v++) {
-            if (sequenciaDeRecargasDeVeiculoAnterior<arr[v]){
-                veiculoComMaiorSequenciaDeRecargas=v;
-                sequenciaMaximaDeRecargas=arr[v];
+            if (acimaMedia) {
+                sempreAcimaDaMedia[veiculo] = true;
+                quantidadeVeiculosSempreAcimaDaMedia++;
+            } else {
+                sempreAcimaDaMedia[veiculo] = false;
             }
         }
-        System.out.println("veículos com mais dias consecutivas a necessitar de recarga <"+sequenciaMaximaDeRecargas+"> dias consecutivos, veiculos: [V"+veiculoComMaiorSequenciaDeRecargas+"]");
+        exibirVeiculosComKmSempreAcimaDaMedia(sempreAcimaDaMedia, quantidadeVeiculosSempreAcimaDaMedia);
     }
 
-    // h) Obter e visualizar o dia mais tardio em que todos os veículos necessitarão de recarregar nesse dia ou (-1)
-    public static void exibirDiaMaisTardioEmQueTodosOsVeiculosRecarregam(int[][] matriz){
+    public static void exibirVeiculosComKmSempreAcimaDaMedia(boolean[] arrSempreAcimaDaMedia, int quantVeiculos) {
+        if (quantVeiculos == 0) {
+            System.out.print("f) nenhum veículo teve sempre deslocações acima da média diária");
+        } else {
+            System.out.printf("f) deslocações sempre acima da média diária%n<%d> veículos : ", quantVeiculos);
+            for (int veiculo = 0; veiculo < arrSempreAcimaDaMedia.length; veiculo++) {
+                if (arrSempreAcimaDaMedia[veiculo]) {
+                    System.out.printf("[V%d] ", veiculo);
+                }
+            }
+        }
+        System.out.printf("%n%n");
+    }
+
+    //g
+
+    public static void preencherArrayComMaximaSequenciaDeRecargasPorVeiculo(int[][] matrizRecargas) {
+        int[] recargasConsecutivasDeCadaVeiculo = new int[matrizRecargas.length];
+        int maximaSequenciaDeRecargas = 0;
+        for (int veiculo = 0; veiculo < matrizRecargas.length; veiculo++) {
+            int somaDeRecargasConsecutivas = 0;
+            for (int dia = 0; dia < matrizRecargas[0].length; dia++) {
+                if (matrizRecargas[veiculo][dia] != 0) {
+                    somaDeRecargasConsecutivas += 1;
+                } else {
+                    somaDeRecargasConsecutivas = 0;
+                }
+                if (somaDeRecargasConsecutivas > recargasConsecutivasDeCadaVeiculo[veiculo]) {
+                    recargasConsecutivasDeCadaVeiculo[veiculo] = somaDeRecargasConsecutivas;
+                }
+            }
+            if (recargasConsecutivasDeCadaVeiculo[veiculo] > maximaSequenciaDeRecargas) {
+                maximaSequenciaDeRecargas = recargasConsecutivasDeCadaVeiculo[veiculo];
+            }
+        }
+        exibirVeiculoComMaisDiasConsecutivosDeRecargas(recargasConsecutivasDeCadaVeiculo, maximaSequenciaDeRecargas);
+    }
+
+    public static void exibirVeiculoComMaisDiasConsecutivosDeRecargas(int[] arr, int maxSeqDeRecargas) {
+        if (maxSeqDeRecargas == 0) {
+            System.out.print("g) nenhum veículo recarregou bateria");
+        } else {
+            System.out.printf("g) veículos com mais dias consecutivas a necessitar de recarga%n<%d> dias consecutivos, veículos : ", maxSeqDeRecargas);
+            for (int veiculo = 0; veiculo < arr.length; veiculo++) {
+                if (maxSeqDeRecargas == arr[veiculo]) {
+                    System.out.printf("[V%d] ", veiculo);
+                }
+            }
+        }
+        System.out.printf("%n%n");
+    }
+
+    // h
+    public static void exibirDiaMaisTardioEmQueTodosOsVeiculosRecarregam(int[][] matriz) {
         boolean todosCarregaram;
         int maiorDia = -1;
-        for (int d = 0; d < matriz[0].length; d++) {
+        for (int dia = 0; dia < matriz[0].length; dia++) {
             todosCarregaram = true;
-            for (int v = 0; v < matriz.length; v++) {
-                if (matriz[v][d] != 0){
+            for (int veiculo = 0; veiculo < matriz.length; veiculo++) {
+                if (matriz[veiculo][dia] == 0) {
                     todosCarregaram = false;
                 }
             }
-            if (todosCarregaram){
-                maiorDia = d;
+            if (todosCarregaram) {
+                maiorDia = dia;
             }
         }
-        System.out.printf("h) dia mais tardio em que todos os veículos necessitam de recarregar <%s>",maiorDia);
+        if (maiorDia != -1) {
+            System.out.printf("h) dia mais tardio em que todos os veículos necessitam de recarregar <%s>", maiorDia);
+        } else {
+            System.out.print("h) não existem dias em que todos os carros tenham recarregado bateria");
+        }
+        System.out.printf("%n%n");
     }
 
 
-
-    public static void apagaroqueestaembaixo(){
-
+    // i
+    public static void calcularCustoEstimadoRecarregarTodaFrota(int[][] matrizNumCarregamentos) {
+        int somaRecarregamentos = 0;
+        int numeroVeiculos = matrizNumCarregamentos.length;
+        int quantidadeTotalDias = matrizNumCarregamentos[0].length;
+        for (int veiculo = 0; veiculo < numeroVeiculos; veiculo++) {
+            for (int dia = 0; dia < quantidadeTotalDias; dia++) {
+                somaRecarregamentos += matrizNumCarregamentos[veiculo][dia];
+            }
+        }
+        double custoTotalCarregarFrota = (somaRecarregamentos * CUSTOCARREGAMENTO);
+        System.out.printf("i) custo das recargas da frota <%.2f €>%n%n", custoTotalCarregarFrota);
     }
 
-    public static void apagar2teste(){
-
-    }
-
-    public static void apagar(){
-
-    }
-
-    public static void apaapdomeivorwjnfvkr(){
-            int a =2;
-            int b =3;
-
+    //j
+    public static void obterVeiculoDePrevencao(int[][] matrizPrincipal, double[][] matrizPorcentagemBaterias) {
+        int numeroCarros = matrizPrincipal.length;
+        int veiculoMenorKm = matrizPrincipal[0][DIAPREVENCAO], idVeiculoMenorKm = 0;
+        for (int km = 1; km < numeroCarros; km++) {
+            if (matrizPrincipal[km][DIAPREVENCAO] < veiculoMenorKm) {
+                veiculoMenorKm = matrizPrincipal[km][DIAPREVENCAO];
+                idVeiculoMenorKm = km;
+            } else if (matrizPrincipal[km][DIAPREVENCAO] == veiculoMenorKm) {
+                    if (matrizPorcentagemBaterias[km][DIAPREVENCAO] > matrizPorcentagemBaterias[idVeiculoMenorKm][DIAPREVENCAO]) {
+                        idVeiculoMenorKm = km;
+                    }
+            }
+        }
+        System.out.printf("j) veículo de prevenção no dia <%d> : V%d%n", DIAPREVENCAO, idVeiculoMenorKm);
     }
 }
-
-
-// j) criar constante para colocar o dia X
-
