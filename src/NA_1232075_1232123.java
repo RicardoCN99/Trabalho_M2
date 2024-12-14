@@ -15,7 +15,6 @@ public class NA_1232075_1232123 {
         // a
         int[][] matrizPlaneamento = obterInformacao();
         // b
-        System.out.println("apagar linha");
         somarKmTotalAPercorrerPorCadaVeiculo(matrizPlaneamento);
         // c
         int[][] matrizCarregamentos = calcularNumeroRecargasDaBateriaPorDiaPorCarro(matrizPlaneamento);
