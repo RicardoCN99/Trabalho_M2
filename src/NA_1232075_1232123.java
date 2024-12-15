@@ -16,7 +16,7 @@ public class NA_1232075_1232123 {
         int[][] matrizPlaneamento = obterInformacao();
         // b
         somarKmTotalAPercorrerPorCadaVeiculo(matrizPlaneamento);
-        // c
+      
         int[][] matrizCarregamentos = calcularNumeroRecargasDaBateriaPorDiaPorCarro(matrizPlaneamento);
         // d
         double[][] matrizPorcentagemBateria = calcularPercentagemDaBateria(matrizPlaneamento);
