@@ -14,7 +14,6 @@ public class NA_1232075_1232123 {
     public static void main(String[] args) throws FileNotFoundException {
         // a
         int[][] matrizPlaneamento = obterInformacao();
-        // d
         somarKmTotalAPercorrerPorCadaVeiculo(matrizPlaneamento);
         // c
         int[][] matrizCarregamentos = calcularNumeroRecargasDaBateriaPorDiaPorCarro(matrizPlaneamento);
